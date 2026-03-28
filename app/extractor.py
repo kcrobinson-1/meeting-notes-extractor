@@ -1,10 +1,12 @@
 from typing import Literal
 
 from app.extractors import (
-    AIExtractorNotImplementedError,
     AIMeetingNotesExtractor,
     DeterministicMeetingNotesExtractor,
     MeetingNotesExtractor,
+    OpenAIConfigurationError,
+    OpenAIRequestError,
+    OpenAIResponseFormatError,
 )
 from app.schemas import ExtractRequest, ExtractResponse
 
@@ -28,11 +30,13 @@ def get_extractor(strategy: ExtractorStrategy) -> MeetingNotesExtractor:
 
 
 __all__ = [
-    "AIExtractorNotImplementedError",
     "AIMeetingNotesExtractor",
     "DeterministicMeetingNotesExtractor",
     "ExtractorStrategy",
     "MeetingNotesExtractor",
+    "OpenAIConfigurationError",
+    "OpenAIRequestError",
+    "OpenAIResponseFormatError",
     "extract_meeting_notes",
     "get_extractor",
 ]

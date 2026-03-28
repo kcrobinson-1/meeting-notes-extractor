@@ -200,8 +200,35 @@ Expected environment variables may include:
 * `OPENAI_API_KEY`
 * `OPENAI_MODEL` (optional)
 
-The current codebase does not read environment variables yet. Add them only when the implementation needs them.
+The AI extractor now reads these variables:
 
+* `OPENAI_API_KEY`: required when using the AI extraction strategy
+* `OPENAI_MODEL`: optional override for the OpenAI model name; defaults to `gpt-4o-mini`
+
+Recommended local setup:
+
+1. Create an OpenAI API key in the OpenAI dashboard.
+2. Copy `.env.example` to `.env`.
+3. Replace the placeholder value in `.env` with your real key.
+4. Optionally change `OPENAI_MODEL` in `.env` if you want to test another model.
+
+Example:
+
+```bash
+cp .env.example .env
+```
+
+Then edit `.env`:
+
+```env
+OPENAI_API_KEY=your_real_openai_api_key
+OPENAI_MODEL=gpt-4o-mini
+```
+
+`.env` is ignored by git, so local secrets should not be committed.
+The application loads `.env` automatically, so you do not need to re-run `export ...`
+commands every time you start work on the project.
+ 
 Do not hardcode secrets.
 
 ---

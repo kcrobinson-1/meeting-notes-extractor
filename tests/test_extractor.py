@@ -2,11 +2,13 @@ from datetime import date
 
 import pytest
 
+import app.extractor as extractor_module
 from app.extractor import extract_meeting_notes, get_extractor
-from app.extractors.ai import AIExtractorNotImplementedError, AIMeetingNotesExtractor
+from app.extractors.ai import AIMeetingNotesExtractor
 from app.extractors.base import MeetingNotesExtractor
 from app.extractors.deterministic import DeterministicMeetingNotesExtractor
-from app.schemas import ExtractRequest
+from app.openai_client import OpenAIConfigurationError
+from app.schemas import ExtractRequest, ExtractResponse
 
 
 def test_deterministic_extractor_uses_meeting_metadata() -> None:
@@ -58,27 +60,64 @@ def test_default_extractor_matches_deterministic_strategy() -> None:
     assert default_response == deterministic_response
 
 
-def test_ai_extractor_stub_raises_not_implemented() -> None:
-    with pytest.raises(AIExtractorNotImplementedError):
-        AIMeetingNotesExtractor().extract(
-            ExtractRequest(notes_text="Alice said the migration slips by 2 weeks."),
-        )
+def test_ai_extractor_uses_injected_parser() -> None:
+    expected_response = ExtractResponse(
+        summary="AI summary",
+        decisions=["Delay the migration"],
+        action_items=[],
+        open_questions=[],
+        ambiguities=[],
+    )
+
+    extractor = AIMeetingNotesExtractor(parser=lambda request: expected_response)
+
+    response = extractor.extract(
+        ExtractRequest(notes_text="Alice said the migration slips by 2 weeks.")
+    )
+
+    assert response == expected_response
 
 
 def test_extract_meeting_notes_ai_strategy_routes_to_ai_extractor() -> None:
-    with pytest.raises(AIExtractorNotImplementedError):
-        extract_meeting_notes(
+    original_ai_extractor = extractor_module._EXTRACTORS["ai"]
+    expected_response = ExtractResponse(
+        summary="AI summary",
+        decisions=["Delay the migration"],
+        action_items=[],
+        open_questions=[],
+        ambiguities=[],
+    )
+
+    extractor_module._EXTRACTORS["ai"] = AIMeetingNotesExtractor(
+        parser=lambda request: expected_response
+    )
+
+    try:
+        response = extract_meeting_notes(
             ExtractRequest(notes_text="Alice said the migration slips by 2 weeks."),
             strategy="ai",
         )
+    finally:
+        extractor_module._EXTRACTORS["ai"] = original_ai_extractor
+
+    assert response == expected_response
 
 
-def test_deterministic_extractor_records_due_date_ambiguity_without_meeting_date() -> (
-    None
-):
-    response = DeterministicMeetingNotesExtractor().extract(
-        ExtractRequest(notes_text="Bob owns the rollback doc by Friday.")
-    )
+def test_ai_extractor_requires_openai_configuration_when_env_is_missing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+
+    with pytest.raises(OpenAIConfigurationError):
+        get_extractor("ai").extract(
+            ExtractRequest(notes_text="Alice said the migration slips by 2 weeks.")
+        )
+
+
+def test_deterministic_extractor_uses_today_when_meeting_date_is_missing() -> None:
+    response = DeterministicMeetingNotesExtractor(
+        reference_date_provider=lambda: date(2026, 3, 24)
+    ).extract(ExtractRequest(notes_text="Bob owns the rollback doc by Friday."))
 
     assert response.summary == (
         "The meeting notes covered Bob owning the rollback doc."
@@ -87,15 +126,10 @@ def test_deterministic_extractor_records_due_date_ambiguity_without_meeting_date
         {
             "task": "the rollback doc",
             "owner": "Bob",
-            "due_date": None,
+            "due_date": date(2026, 3, 27),
         }
     ]
-    assert response.ambiguities == [
-        (
-            'Due date "Friday" for task "the rollback doc" could not be '
-            "resolved without a meeting_date."
-        )
-    ]
+    assert response.ambiguities == []
 
 
 def test_deterministic_extractor_without_supported_patterns_returns_ambiguity() -> None:
