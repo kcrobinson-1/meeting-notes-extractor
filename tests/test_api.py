@@ -12,37 +12,37 @@ def test_health_check_returns_ok() -> None:
     assert response.json() == {"status": "ok"}
 
 
-def test_extract_returns_dummy_response() -> None:
+def test_extract_returns_structured_response() -> None:
     response = client.post(
         "/extract",
         json={
             "meeting_title": "Platform sync",
             "meeting_date": "2026-03-27",
-            "notes_text": "Alice said the migration slips by 2 weeks.",
+            "notes_text": (
+                "Alice said the migration slips by 2 weeks. "
+                "Bob owns the rollback doc by Friday. "
+                "Do we need to notify partners?"
+            ),
         },
     )
 
     assert response.status_code == 200
     assert response.json() == {
         "summary": (
-            'Dummy summary for "Platform sync" based on the provided meeting notes.'
+            'The meeting "Platform sync" covered the migration slips by 2 weeks, '
+            "Bob owning the rollback doc, an open question about do we need to "
+            "notify partners."
         ),
-        "decisions": ["Dummy decision: proceed with the next planned step."],
+        "decisions": ["The migration slips by 2 weeks"],
         "action_items": [
             {
-                "task": "Dummy action item",
+                "task": "the rollback doc",
                 "owner": "Bob",
                 "due_date": "2026-04-03",
             }
         ],
-        "open_questions": ["Dummy open question: is any follow-up needed?"],
-        "ambiguities": [
-            (
-                "Dummy ambiguity: dates and owners may be inferred in a real "
-                "implementation."
-            ),
-            "Meeting date was provided as 2026-03-27.",
-        ],
+        "open_questions": ["Do we need to notify partners?"],
+        "ambiguities": [],
     }
 
 

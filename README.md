@@ -4,9 +4,10 @@ A minimal FastAPI service for turning freeform meeting notes into structured out
 
 ## Current Status
 
-The extraction endpoint is still stubbed. It validates the request shape and returns
-a schema-correct dummy response that uses the provided meeting metadata, which gives
-us a stable API surface to build against before adding real extraction logic.
+The extraction endpoint now uses a pluggable extraction layer. The default strategy is
+a small deterministic extractor for common meeting-note patterns such as decisions,
+action items, and open questions. An AI extractor stub is also in place to show where
+future model-backed parsing will be wired in while preserving the same response schema.
 
 ## Quick Start
 
