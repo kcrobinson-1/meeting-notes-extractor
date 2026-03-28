@@ -2,12 +2,12 @@
 
 ## Overview
 
-This project is a small FastAPI service that accepts raw meeting notes and returns structured data extracted by an LLM.
+This project is a small FastAPI service that accepts raw meeting notes and returns structured extracted data.
 
 The system is intentionally simple:
 
 * FastAPI app for request handling and validation
-* extraction layer responsible for prompt construction, LLM calls, and response validation
+* pluggable extraction layer responsible for interpreting notes and returning validated structured output
 
 ---
 
@@ -16,8 +16,7 @@ The system is intentionally simple:
 ```text
 Client sends POST request with meeting notes and optional metadata
 → FastAPI validates request payload
-→ Extraction module builds prompt and calls LLM
-→ LLM returns structured result
+→ Extraction module selects an extraction strategy and interprets the notes
 → FastAPI validates response schema
 → Client receives structured output
 ```
@@ -47,15 +46,18 @@ Planned implementation:
 
 Responsibilities:
 
-* define prompt strategy
-* call LLM API
-* parse and validate model output
+* define extraction strategies
+* interpret note text into the response schema
+* parse and validate extracted output
 * surface ambiguities instead of hiding uncertainty
 
 Planned implementation:
 
 * isolated module such as `extractor.py`
 * one main extraction function called by the route layer
+* strategy selection happens inside the extraction layer
+* deterministic extraction is the default current implementation
+* AI extraction remains stubbed until model integration is added
 * no agent framework in v1
 * single-pass extraction workflow
 
@@ -89,13 +91,13 @@ Clients should not know prompt details or model behavior.
 
 The extraction layer owns:
 
-* prompt contents
-* model selection
+* extraction strategy selection
+* extraction rules
 * output validation
 * fallback behavior
 * interpretation of optional meeting metadata
 
-The rest of the application should not be tightly coupled to the model API.
+The rest of the application should not be tightly coupled to any specific extraction strategy.
 
 ---
 

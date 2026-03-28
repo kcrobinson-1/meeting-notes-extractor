@@ -89,7 +89,7 @@ Expected output characteristics:
 
 The next meaningful improvements should focus on:
 
-* replacing the dummy extractor with a real extraction implementation
+* improving extraction coverage beyond the initial rule-based implementation
 * keeping output aligned with the documented schema
 * adding regression tests for realistic note samples
 * making ambiguity handling explicit rather than silently guessing
