@@ -1,0 +1,23 @@
+{
+    "python.testing.cwd": "${workspaceFolder}",
+    "python.testing.pytestArgs": [
+        "tests"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true,
+    "files.exclude": {
+        "**/.pytest_cache": true,
+        "**/.ruff_cache": true,
+        "**/build": true,
+        "**/dist": true,
+        "**/*.egg-info": true
+    },
+    "search.exclude": {
+        "**/.pytest_cache": true,
+        "**/.ruff_cache": true,
+        "**/build": true,
+        "**/dist": true,
+        "**/*.egg-info": true
+    },
+    "makefile.makefilePath": "Makefile"
+}
