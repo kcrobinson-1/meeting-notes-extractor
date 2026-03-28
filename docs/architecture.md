@@ -57,7 +57,7 @@ Planned implementation:
 * one main extraction function called by the route layer
 * strategy selection happens inside the extraction layer
 * deterministic extraction is the default current implementation
-* AI extraction remains stubbed until model integration is added
+* AI extraction is implemented behind a separate extractor class and validates model output against the shared schema
 * no agent framework in v1
 * single-pass extraction workflow
 

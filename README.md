@@ -6,8 +6,12 @@ A minimal FastAPI service for turning freeform meeting notes into structured out
 
 The extraction endpoint now uses a pluggable extraction layer. The default strategy is
 a small deterministic extractor for common meeting-note patterns such as decisions,
-action items, and open questions. An AI extractor stub is also in place to show where
-future model-backed parsing will be wired in while preserving the same response schema.
+action items, and open questions. An AI extractor is also wired behind the same
+interface and validates model output against the shared response schema.
+
+The FastAPI route still uses the deterministic strategy by default. The AI extractor
+currently requires `OPENAI_API_KEY`, and uses `OPENAI_MODEL` when provided. Copy
+`.env.example` to `.env` for local AI-enabled development.
 
 ## Quick Start
 

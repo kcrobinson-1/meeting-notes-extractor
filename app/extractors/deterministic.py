@@ -1,4 +1,5 @@
 import re
+from collections.abc import Callable
 from datetime import date, timedelta
 
 from app.extractors.base import MeetingNotesExtractor
@@ -36,12 +37,18 @@ DECISION_KEYWORDS = (
 
 
 class DeterministicMeetingNotesExtractor(MeetingNotesExtractor):
+    def __init__(
+        self, reference_date_provider: Callable[[], date] = date.today
+    ) -> None:
+        self._reference_date_provider = reference_date_provider
+
     def extract(self, request: ExtractRequest) -> ExtractResponse:
         sentences = self._split_sentences(request.notes_text)
         decisions: list[str] = []
         action_items: list[ActionItem] = []
         open_questions: list[str] = []
         ambiguities: list[str] = []
+        reference_date = request.meeting_date or self._reference_date_provider()
 
         for sentence in sentences:
             if self._is_question(sentence):
@@ -51,7 +58,7 @@ class DeterministicMeetingNotesExtractor(MeetingNotesExtractor):
                 continue
 
             action_item, action_ambiguities = self._extract_action_item(
-                sentence, request.meeting_date
+                sentence, reference_date
             )
             if action_item is not None:
                 action_items.append(action_item)
@@ -91,7 +98,7 @@ class DeterministicMeetingNotesExtractor(MeetingNotesExtractor):
         return sentence.rstrip().endswith("?")
 
     def _extract_action_item(
-        self, sentence: str, meeting_date: date | None
+        self, sentence: str, reference_date: date
     ) -> tuple[ActionItem | None, list[str]]:
         for pattern in ACTION_PATTERNS:
             match = pattern.match(self._clean_sentence(sentence))
@@ -101,7 +108,7 @@ class DeterministicMeetingNotesExtractor(MeetingNotesExtractor):
             task = match.group("task").strip()
             owner = self._normalize_name(match.group("owner"))
             due_phrase = match.group("due")
-            due_date, ambiguity = self._parse_due_date(due_phrase, meeting_date, task)
+            due_date, ambiguity = self._parse_due_date(due_phrase, reference_date, task)
 
             return (
                 ActionItem(task=task, owner=owner, due_date=due_date),
@@ -128,7 +135,7 @@ class DeterministicMeetingNotesExtractor(MeetingNotesExtractor):
         return attributed_clause[:1].upper() + attributed_clause[1:]
 
     def _parse_due_date(
-        self, due_phrase: str | None, meeting_date: date | None, task: str
+        self, due_phrase: str | None, reference_date: date, task: str
     ) -> tuple[date | None, str | None]:
         if due_phrase is None:
             return None, None
@@ -147,16 +154,7 @@ class DeterministicMeetingNotesExtractor(MeetingNotesExtractor):
                 f'Could not normalize due date "{normalized}" for task "{task}".',
             )
 
-        if meeting_date is None:
-            return (
-                None,
-                (
-                    f'Due date "{normalized}" for task "{task}" could not be '
-                    "resolved without a meeting_date."
-                ),
-            )
-
-        return self._next_weekday(meeting_date, weekday), None
+        return self._next_weekday(reference_date, weekday), None
 
     def _next_weekday(self, start: date, target_weekday: int) -> date:
         offset = (target_weekday - start.weekday()) % 7

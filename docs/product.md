@@ -47,6 +47,7 @@ v1 is successful when:
 * users can paste notes and get structured output in under a few seconds
 * output is consistently formatted according to the API schema
 * action items include owners and due dates when inferable
+* relative dates use `meeting_date` when provided, otherwise the current date at extraction time
 * ambiguities are surfaced rather than hidden
 * malformed inputs are rejected clearly and consistently
 
@@ -65,6 +66,28 @@ Expected output characteristics:
 * action item that Bob writes the rollback document
 * open question about notifying partners
 * ambiguity that the exact migration date is unclear
+
+---
+
+## Open Product Question
+
+Relative date handling still needs a final product decision when the text is ambiguous.
+
+Current intended behavior:
+
+* if `meeting_date` is provided, relative dates should resolve from that date
+* if `meeting_date` is missing, relative dates should resolve from the current date at extraction time
+
+Still unresolved:
+
+* whether phrases like "by Friday" should mean the same calendar day when the meeting
+  already occurs on a Friday, or the following Friday
+
+Example:
+
+* If `meeting_date` is `2026-03-27` and the notes say `Bob owns the rollback doc by Friday`,
+  the system could interpret that as either `2026-03-27` or `2026-04-03`.
+* The product needs one explicit rule here so deterministic and AI extraction stay aligned.
 
 ---
 

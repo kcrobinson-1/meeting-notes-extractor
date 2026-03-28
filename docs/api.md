@@ -23,7 +23,7 @@ Extract structured meeting data from freeform notes.
 ### Fields
 
 * `meeting_title` (string, optional): Title of the meeting. Blank strings are rejected.
-* `meeting_date` (string, optional): ISO date string in `YYYY-MM-DD` format
+* `meeting_date` (string, optional): ISO date string in `YYYY-MM-DD` format. Relative dates are resolved against this date when provided; otherwise they may be resolved relative to the current date at extraction time.
 * `notes_text` (string, required): Raw meeting notes. Blank strings are rejected.
 * Additional request fields are rejected
 
@@ -59,7 +59,7 @@ Extract structured meeting data from freeform notes.
 
   * `task` (string): Description of the task
   * `owner` (string, optional): Responsible person
-  * `due_date` (string, optional): ISO date string
+  * `due_date` (string, optional): ISO date string. Relative dates may be resolved from `meeting_date` or, when absent, from the current date at extraction time.
 * `open_questions` (string[]): Outstanding questions
 * `ambiguities` (string[]): Unclear or inferred information
 
