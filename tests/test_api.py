@@ -1,6 +1,9 @@
+from _pytest.monkeypatch import MonkeyPatch
 from fastapi.testclient import TestClient
 
+import app.main as main_module
 from app.main import app
+from app.schemas import ExtractResponse
 
 client = TestClient(app)
 
@@ -43,6 +46,47 @@ def test_extract_returns_structured_response() -> None:
         ],
         "open_questions": ["Do we need to notify partners?"],
         "ambiguities": [],
+    }
+
+
+def test_extract_uses_ai_strategy_when_configured(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    expected_response = ExtractResponse(
+        summary="AI summary",
+        decisions=[],
+        action_items=[],
+        open_questions=[],
+        ambiguities=[],
+    )
+
+    def fake_extract_meeting_notes(request: object, strategy: str) -> ExtractResponse:
+        assert strategy == "ai"
+        return expected_response
+
+    monkeypatch.setenv("EXTRACTOR_STRATEGY", "ai")
+    monkeypatch.setattr(
+        main_module, "extract_meeting_notes", fake_extract_meeting_notes
+    )
+
+    response = client.post("/extract", json={"notes_text": "Alice said hello."})
+
+    assert response.status_code == 200
+    assert response.json() == expected_response.model_dump(mode="json")
+
+
+def test_extract_rejects_invalid_configured_strategy(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    invalid_client = TestClient(app, raise_server_exceptions=False)
+
+    monkeypatch.setenv("EXTRACTOR_STRATEGY", "surprise")
+
+    response = invalid_client.post("/extract", json={"notes_text": "Alice said hello."})
+
+    assert response.status_code == 500
+    assert response.json() == {
+        "detail": "EXTRACTOR_STRATEGY must be one of: deterministic, ai."
     }
 
 

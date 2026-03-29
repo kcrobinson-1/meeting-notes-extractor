@@ -5,8 +5,6 @@ import pytest
 from openai import APIError, RateLimitError
 
 from app.openai_client import (
-    DEFAULT_OPENAI_MODEL,
-    OpenAIConfigurationError,
     OpenAIRequestError,
     OpenAIResponseFormatError,
     build_openai_input,
@@ -15,6 +13,7 @@ from app.openai_client import (
     parse_meeting_notes_with_openai,
 )
 from app.schemas import ExtractRequest, ExtractResponse
+from app.settings import DEFAULT_OPENAI_MODEL, OpenAIConfigurationError
 
 
 class FakeResponsesAPI:

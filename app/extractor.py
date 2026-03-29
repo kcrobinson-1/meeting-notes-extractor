@@ -3,6 +3,7 @@ from typing import Literal
 from app.extractors import (
     AIMeetingNotesExtractor,
     DeterministicMeetingNotesExtractor,
+    InvalidExtractorStrategyError,
     MeetingNotesExtractor,
     OpenAIConfigurationError,
     OpenAIRequestError,
@@ -33,6 +34,7 @@ __all__ = [
     "AIMeetingNotesExtractor",
     "DeterministicMeetingNotesExtractor",
     "ExtractorStrategy",
+    "InvalidExtractorStrategyError",
     "MeetingNotesExtractor",
     "OpenAIConfigurationError",
     "OpenAIRequestError",

@@ -7,8 +7,12 @@ from app.extractor import extract_meeting_notes, get_extractor
 from app.extractors.ai import AIMeetingNotesExtractor
 from app.extractors.base import MeetingNotesExtractor
 from app.extractors.deterministic import DeterministicMeetingNotesExtractor
-from app.openai_client import OpenAIConfigurationError
 from app.schemas import ExtractRequest, ExtractResponse
+from app.settings import (
+    InvalidExtractorStrategyError,
+    OpenAIConfigurationError,
+    get_extractor_strategy,
+)
 
 
 def test_deterministic_extractor_uses_meeting_metadata() -> None:
@@ -112,6 +116,23 @@ def test_ai_extractor_requires_openai_configuration_when_env_is_missing(
         get_extractor("ai").extract(
             ExtractRequest(notes_text="Alice said the migration slips by 2 weeks.")
         )
+
+
+def test_get_extractor_strategy_defaults_to_deterministic(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("EXTRACTOR_STRATEGY", raising=False)
+
+    assert get_extractor_strategy() == "deterministic"
+
+
+def test_get_extractor_strategy_rejects_invalid_values(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("EXTRACTOR_STRATEGY", "surprise")
+
+    with pytest.raises(InvalidExtractorStrategyError):
+        get_extractor_strategy()
 
 
 def test_deterministic_extractor_uses_today_when_meeting_date_is_missing() -> None:
