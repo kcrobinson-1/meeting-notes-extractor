@@ -9,9 +9,10 @@ a small deterministic extractor for common meeting-note patterns such as decisio
 action items, and open questions. An AI extractor is also wired behind the same
 interface and validates model output against the shared response schema.
 
-The FastAPI route still uses the deterministic strategy by default. The AI extractor
-currently requires `OPENAI_API_KEY`, and uses `OPENAI_MODEL` when provided. Copy
-`.env.example` to `.env` for local AI-enabled development.
+The FastAPI route reads `EXTRACTOR_STRATEGY` from the environment and defaults to
+`deterministic`. Set `EXTRACTOR_STRATEGY=ai` to exercise the AI extractor locally.
+The AI extractor also requires `OPENAI_API_KEY`, and uses `OPENAI_MODEL` when
+provided. Copy `.env.example` to `.env` for local AI-enabled development.
 
 ## Quick Start
 
@@ -33,6 +34,7 @@ make lint
 make typecheck
 make test
 make build
+make smoke-ai
 make clean
 make reset-venv
 make compile-deps
@@ -44,6 +46,10 @@ after dependency or interpreter issues.
 Use `make compile-deps` after changing `pyproject.toml` so the committed dependency
 lockfile stays in sync.
 Use `make smoke` to post the checked-in sample request to a running local server.
+Use `make smoke-ai` to start a temporary local server with `EXTRACTOR_STRATEGY=ai`
+and validate the live AI path with the checked-in sample request. It also checks
+that the response matches the shared API contract and includes server log output
+when startup or request handling fails.
 
 ## Docs Map
 

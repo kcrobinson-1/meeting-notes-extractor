@@ -94,6 +94,7 @@ make sync-deps
 | `make compile-deps` | Regenerate `requirements-dev.txt` after dependency changes |
 | `make run` | Start the FastAPI app with reload enabled |
 | `make smoke` | Post the checked-in sample request to the local `/extract` endpoint |
+| `make smoke-ai` | Start a temporary local server with `EXTRACTOR_STRATEGY=ai` and send the sample request |
 | `make lint` | Run Ruff checks and formatting verification |
 | `make typecheck` | Run mypy |
 | `make test` | Run the test suite |
@@ -165,6 +166,36 @@ SMOKE_REQUEST=examples/extract-request.json make smoke
 SMOKE_URL=http://127.0.0.1:8000/extract make smoke
 ```
 
+## AI Smoke Test
+
+For changes that touch the AI path, run:
+
+```bash
+make smoke-ai
+```
+
+This command:
+
+* verifies `OPENAI_API_KEY` is available
+* starts a temporary local server with `EXTRACTOR_STRATEGY=ai`
+* waits for the health endpoint
+* posts `examples/extract-request.json`
+* validates that the response matches the shared `ExtractResponse` contract
+* checks that the sample produced at least one structured item
+* prints the formatted JSON response
+* includes the server log tail if startup or request handling fails
+
+Optional overrides:
+
+```bash
+SMOKE_AI_REQUEST=examples/extract-request.json make smoke-ai
+SMOKE_AI_PORT=8010 make smoke-ai
+```
+
+This check is intended for local and agentic validation of the live AI path.
+It is not part of the default CI flow because it depends on secrets, network
+access, and available OpenAI quota.
+
 ---
 
 ## Workspace Hygiene
@@ -199,11 +230,13 @@ Expected environment variables may include:
 
 * `OPENAI_API_KEY`
 * `OPENAI_MODEL` (optional)
+* `EXTRACTOR_STRATEGY` (optional)
 
 The AI extractor now reads these variables:
 
 * `OPENAI_API_KEY`: required when using the AI extraction strategy
-* `OPENAI_MODEL`: optional override for the OpenAI model name; defaults to `gpt-4o-mini`
+* `OPENAI_MODEL`: optional override for the OpenAI model name; defaults to `gpt-5-mini`
+* `EXTRACTOR_STRATEGY`: optional strategy selector for the app route; supports `deterministic` and `ai`, and defaults to `deterministic`
 
 Recommended local setup:
 
@@ -211,6 +244,7 @@ Recommended local setup:
 2. Copy `.env.example` to `.env`.
 3. Replace the placeholder value in `.env` with your real key.
 4. Optionally change `OPENAI_MODEL` in `.env` if you want to test another model.
+5. Optionally set `EXTRACTOR_STRATEGY=ai` if you want the FastAPI route to use the AI extractor.
 
 Example:
 
@@ -222,7 +256,8 @@ Then edit `.env`:
 
 ```env
 OPENAI_API_KEY=your_real_openai_api_key
-OPENAI_MODEL=gpt-4o-mini
+OPENAI_MODEL=gpt-5-mini
+EXTRACTOR_STRATEGY=deterministic
 ```
 
 `.env` is ignored by git, so local secrets should not be committed.

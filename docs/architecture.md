@@ -55,8 +55,8 @@ Planned implementation:
 
 * isolated module such as `extractor.py`
 * one main extraction function called by the route layer
-* strategy selection happens inside the extraction layer
-* deterministic extraction is the default current implementation
+* strategy selection is driven by app configuration and dispatched through the extraction layer
+* deterministic extraction is the default route-level implementation
 * AI extraction is implemented behind a separate extractor class and validates model output against the shared schema
 * no agent framework in v1
 * single-pass extraction workflow

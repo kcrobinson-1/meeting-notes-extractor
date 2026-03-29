@@ -1,10 +1,13 @@
-.PHONY: venv reset-venv install-dev sync-deps compile-deps run smoke lint typecheck test build check clean
+.PHONY: venv reset-venv install-dev sync-deps compile-deps run smoke smoke-ai lint typecheck test build check clean
 
 PYTHON ?= python3
 VENV_DIR := ./.venv
 VENV_BIN := ./.venv/bin
 SMOKE_URL ?= http://127.0.0.1:8000/extract
 SMOKE_REQUEST ?= examples/extract-request.json
+SMOKE_AI_HOST ?= 127.0.0.1
+SMOKE_AI_PORT ?= 8001
+SMOKE_AI_REQUEST ?= examples/extract-request.json
 
 $(VENV_BIN)/python:
 	$(PYTHON) -m venv $(VENV_DIR)
@@ -34,6 +37,12 @@ smoke: $(VENV_BIN)/python
 		-X POST "$(SMOKE_URL)" \
 		-H "Content-Type: application/json" \
 		--data @"$(SMOKE_REQUEST)" | $(VENV_BIN)/python -m json.tool
+
+smoke-ai: $(VENV_BIN)/python
+	SMOKE_AI_HOST="$(SMOKE_AI_HOST)" \
+	SMOKE_AI_PORT="$(SMOKE_AI_PORT)" \
+	SMOKE_AI_REQUEST="$(SMOKE_AI_REQUEST)" \
+	$(VENV_BIN)/python scripts/smoke_ai.py
 
 lint:
 	$(VENV_BIN)/ruff check .
